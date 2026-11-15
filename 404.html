@@ -19,13 +19,13 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
-</style><meta charset="UTF-8"><title>جاري التحويل... | الفهد</title><script>
+</style><meta charset="UTF-8"><title>جاري التحويل... | الفهد</title><meta name="robots" content="noindex, follow"><script>
 (function(){
   var path=location.pathname;
   var m=path.match(/\/properties\/([^\/]+)/);
   var base=path.split("/al-fahd-real-estate/")[0]+"/al-fahd-real-estate/";
-  // لو الرابط في الجذر على دومين مخصص
   if(path.indexOf("al-fahd-real-estate")==-1) base="/";
+  // /properties/ID/ هو الرابط الرسمي - 404 بتحوله لـ property.html?id=ID عشان يعرض العقار - والـ Canonical في property.html هو /properties/ID/ - فالرابط الرسمي محفوظ
   if(m){ location.replace(base+"property.html?id="+encodeURIComponent(decodeURIComponent(m[1]))); }
   else { location.replace(base); }
 })();

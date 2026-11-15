@@ -20,10 +20,17 @@ Disallow: /
 User-agent: ChatGPT-User
 Allow: /
 
+# منع فهرسة الروابط المكررة القديمة ?prop= و ?id= - الرابط الرسمي هو /properties/ID/ فقط
+# ده يمنع Google يعتبر ?prop=ID و /properties/ID/ صفحتين مكررتين - ويحافظ على Canonical
 User-agent: *
 Allow: /
+Allow: /properties/
+Allow: /property.html
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /private/
+Disallow: /*?prop=
+Disallow: /*?id=
 
+Sitemap: https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/sitemap-index.xml
 Sitemap: https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/sitemap.xml

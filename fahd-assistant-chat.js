@@ -1,4 +1,4 @@
-/* AL FAHD - Assistant v4 - Comprehensive - موظف مبيعات محترف - COMPACT
+/* AL FAHD - Assistant v5 - Pagination + Fresh + Unified Links + Auto-scroll - موظف مبيعات محترف - COMPACT
    آلية موحدة لجلب العقارات: window.props + Cache + Firestore مباشرة - يقرأ كل المتاح - مش عينة
    يدرس 13 نقطة: سعر - منطقة/مرحلة/مجموعة - مساحة - غرف - حمامات - تشطيب - دور - أسانسير - حديقة - روف/بنتهاوس - بيزمنت - مفروش - جاهزية
    بحث بالميزانية: من 3 لـ 4 مليون - لو أقرب 4.2 يعرضها ويوضح الفرق - ممنوع اختراع سعر
@@ -25,29 +25,46 @@
   }
   function clean(s){ return String(s||"").toLowerCase(); }
   function hayOf(p){ return clean((p.title||"")+" "+(p.city||"")+" "+(p.address||"")+" "+(p.type||"")+" "+(p.details||"")+" "+(p.compound||"")+" "+(p.stage||"")+" "+(p.group||"")+" "+(p.finish||p.finishing||"")+" "+(p.floor||p.door||"")); }
-  // --- آلية موحدة لجلب كل العقارات المتاحة ---
+  // --- آلية موحدة لجلب كل العقارات - Pagination + Fresh - تستخدم fahd-core-fix.js لو موجود ---
   async function getAllProps(force){
-    if(cacheProps && !force && (Date.now()-cacheTime<60000)) return cacheProps;
+    // 1) لو fahd-core موجود - استخدمه: Pagination كامل + كاش 5 دقائق + dedup by doc id - مش limit(200)
+    try{
+      if(typeof window.fahdFetchAllProps==="function"){
+        var all=await window.fahdFetchAllProps({force:!!force});
+        var avail=all.filter(isAvailable);
+        // حدث window.props لو كان ناقص
+        try{ if(!window.props||window.props.length<all.length) window.props=all; }catch(e){}
+        return avail;
+      }
+    }catch(e){}
+    // 2) Fallback لو fahd-core مش متحمل: Pagination مباشرة هنا - نفس المنطق - من غير limit(200)
+    if(cacheProps && !force && (Date.now()-cacheTime<5*60*1000)) return cacheProps;
     var map={};
-    function add(list){ (list||[]).forEach(function(p){ if(!p) return; var id=p._id||p.id||""; var k=id||((p.title||"")+"|"+(p.price||"")+"|"+(p.address||"")); if(!map[k]){ var cp=Object.assign({},p); cp._id=id||k; map[k]=cp; } }); }
+    function add(list){ (list||[]).forEach(function(p){ if(!p) return; var id=p._id||p.id||""; var k=id||((p.title||"")+"|"+(p.price||"")+"|"+(p.address||"")); if(!seenCheck(k)){ map[k]=Object.assign({},p,{_id:id||k}); } }); }
+    function seenCheck(k){ return !!map[k]; }
     try{ add(window.props||[]); }catch(e){}
-    try{ var c=JSON.parse(localStorage.getItem("fahdPropsCache")||"null"); if(c&&c.props) add(c.props); if(c&&Array.isArray(c)) add(c); }catch(e){}
-    // Firestore مباشرة - مصدر الموقع الأساسي - لو window.props ناقص
+    // لو window.props فيه بيانات - مش معناه انها كاملة - جرب Firestore بـ Pagination للتأكد من Fresh
     try{
       var db=null;
-      if(typeof firebase!=="undefined"){
-        try{ if(!firebase.apps||!firebase.apps.length) firebase.initializeApp(FB_CONFIG); }catch(e){}
-        try{ db=firebase.firestore(); }catch(e){}
-      }
+      if(typeof firebase!=="undefined"){ try{ if(!firebase.apps||!firebase.apps.length) firebase.initializeApp(FB_CONFIG); }catch(e){} try{ db=firebase.firestore(); }catch(e){} }
       if(db){
-        var snap=null;
-        try{ snap=await db.collection("properties").limit(200).get(); }catch(e){ snap=null; }
-        if(snap){ var arr=[]; snap.forEach(function(d){ var v=d.data(); v._id=d.id; arr.push(v); }); add(arr); }
+        var seenIds={}; Object.keys(map).forEach(function(k){ var pid=map[k]._id; if(pid) seenIds[pid]=1; });
+        var lastDoc=null, guard=0;
+        while(guard<50){
+          guard++;
+          var q=db.collection("properties").orderBy("__name__").limit(500);
+          if(lastDoc) q=q.startAfter(lastDoc);
+          var snap=null;
+          try{ snap=await q.get(); }catch(e){ try{ var q2=db.collection("properties").limit(500); if(lastDoc) q2=q2.startAfter(lastDoc); snap=await q2.get(); }catch(e2){ break; } }
+          if(!snap||snap.empty) break;
+          snap.forEach(function(d){ if(!seenIds[d.id]){ seenIds[d.id]=1; var v=d.data(); v._id=d.id; map[d.id]=v; } });
+          if(snap.size<500) break;
+          lastDoc=snap.docs[snap.docs.length-1];
+        }
       }
     }catch(e){}
     var list=Object.keys(map).map(function(k){return map[k];}).filter(isAvailable);
     cacheProps=list; cacheTime=Date.now();
-    // حدث window.props عشان باقي الموقع يستفيد لو كان ناقص
     try{ if(!window.props||window.props.length<list.length) window.props=list; }catch(e){}
     return list;
   }
@@ -128,7 +145,7 @@
       if(c.furnished===true){ if(/مفروش/i.test(hay)){ score+=12; reasons.push("مفروشة جاهزة"); } else diffs.push("مش مفروشة"); }
       if(c.furnished===false){ if(!/مفروش/i.test(hay)) score+=6; }
       if(c.ready===true){ if(/جاهز|فوري|استلام فوري|جاهزة/i.test(hay)){ score+=8; reasons.push("جاهزة للسكن"); } }
-      if(c.deal){ var isRent=/ايجار|إيجار|مفروش|rent/i.test(String(p.type||"")+" "+String(p.details||"")); if((c.deal==="rent")===isRent){ score+=12; reasons.push(c.deal==="rent"?"للإيجار":"للبيع"); } else diffs.push(c.deal==="rent"?"ده للبيع":"ده للإيجار"); }
+      if(c.deal){ var dealField=String(p.deal||p.purpose||p.offerType||"").toLowerCase(); var isRent=(dealField.indexOf("rent")!==-1||dealField.indexOf("ايجار")!==-1||dealField.indexOf("إيجار")!==-1)||(/ايجار|إيجار|مفروش|rent/i.test(String(p.type||"")+" "+String(p.details||""))&&dealField.indexOf("sale")===-1&&dealField.indexOf("بيع")===-1); if((c.deal==="rent")===isRent){ score+=12; reasons.push(c.deal==="rent"?"للإيجار":"للبيع"); } else diffs.push(c.deal==="rent"?"ده للبيع":"ده للإيجار"); }
       if(c.type==="villa" && /فيلا|villa/i.test(hay)){ score+=12; reasons.push("فيلا"); }
       if(c.type==="penthouse" && /بنتهاوس|penthouse/i.test(hay)){ score+=12; reasons.push("بنتهاوس"); }
       if(c.luxury){
@@ -158,7 +175,7 @@
   function ensureUI(){
     if(document.getElementById("fahd-ai-btn")) return;
     var btn=document.createElement("button"); btn.id="fahd-ai-btn"; btn.textContent="💬 مساعد الفهد العقاري";
-    btn.onclick=function(){ var b=document.getElementById("fahd-ai-box"); b.style.display=(b.style.display==="block"?"none":"block"); };
+    btn.onclick=function(){ var b=document.getElementById("fahd-ai-box"); b.style.display=(b.style.display==="block"?"none":"block"); if(b.style.display==="block") setTimeout(scrollToBottom,100); };
     var box=document.createElement("div"); box.id="fahd-ai-box";
     box.innerHTML='<div id="fahd-ai-head"><span>🏠 مساعد الفهد — موظف مبيعات المكتب</span><button onclick="document.getElementById(\'fahd-ai-box\').style.display=\'none\'" style="background:none;border:none;color:#D4AF37;font-size:18px;cursor:pointer">✕</button></div>'
       +'<div id="fahd-ai-msgs"></div>'
@@ -169,30 +186,40 @@
     document.getElementById("fahd-ai-input").addEventListener("keydown",function(e){ if(e.key==="Enter") send(); });
     box.querySelectorAll(".fahd-ai-chip").forEach(function(c){ c.onclick=function(){ document.getElementById("fahd-ai-input").value=c.getAttribute("data-q"); send(); }; });
     addMsg("bot","أهلاً بيك في مكتب الفهد 👋<br>أنا موظف مبيعات المكتب - بدرس كل الشقق المتاحة - قولي ميزانيتك والمنطقة وعدد الغرف - وهجيبلك أفضل 3-5 خيارات - وأشرحلك ليه كل واحدة مناسبة ليك.<br><b>جرب:</b> أريد شقة بميزانية 3 إلى 4 ملايين — أريد شقة فاخرة بمستوى راق — أريد شقة بحديقة خاصة");
-    // تحديث بيانات العقارات في الخلفية - عند الفتح - من غير ما يبطأ الموقع
-    getAllProps(true).catch(function(){});
+    // سريع: أول ما الموقع يفتح - لا تحمل Firebase - استخدم الشقق اللي في الصفحة + الكاش بس - Firebase يتجيب بس أول ما العميل يسأل - مرة واحدة
+  }
+  function scrollToBottom(){
+    var m=document.getElementById("fahd-ai-msgs"); if(!m) return;
+    // انزل لآخر رسالة - تحت السؤال - العميل مش هيطلع بصباعه
+    var go=function(){ try{ m.scrollTop=m.scrollHeight; m.scrollTo({top:m.scrollHeight,behavior:"smooth"}); }catch(e){ m.scrollTop=m.scrollHeight; } };
+    go();
+    requestAnimationFrame(go);
+    setTimeout(go,50); setTimeout(go,200); setTimeout(go,500);
   }
   function addMsg(who,html){
     var m=document.getElementById("fahd-ai-msgs"); if(!m) return;
-    var d=document.createElement("div"); d.className="fahd-ai-msg "+who; d.innerHTML=html; m.appendChild(d); m.scrollTop=m.scrollHeight;
+    var d=document.createElement("div"); d.className="fahd-ai-msg "+who; d.innerHTML=html; m.appendChild(d);
+    scrollToBottom();
+    // بعد ما الصور تحمل - انزل تاني - عشان الصورة ما ترفعش الرسايل فوق
+    var imgs=d.querySelectorAll("img"); imgs.forEach(function(im){ im.addEventListener("load",scrollToBottom); });
   }
   function waLink(text){ return WA_BASE+encodeURIComponent(text); }
   function renderCards(ranked, c, start, count){
     var slice=ranked.slice(start, start+count);
     slice.forEach(function(r, idx){
       var p=r.p; var globalIdx=start+idx;
-      var pageUrl=SITE+"properties/"+encodeURIComponent(p._id)+"/";
+      var pageUrl=(typeof window.fahdPropUrl==="function"?window.fahdPropUrl(p._id):SITE+"properties/"+encodeURIComponent(p._id)+"/");
       var img=(p.images&&p.images[0])||p.image||"logo.jpeg";
       var note=r.diffs.length?"<div style='color:#FBBF24;font-size:12px'>⚠️ ملاحظة بصراحة: "+r.diffs.join(" • ")+"</div>":"<div style='color:#4ade80;font-size:12px'>✅ مطابق لطلبك</div>";
       var rankLabel=globalIdx===0?"🥇 أفضل ترشيح ليك":globalIdx===1?"🥈 ترشيح تاني قوي":globalIdx===2?"🥉 ترشيح تالت":"⭐ ترشيح "+(globalIdx+1);
-      var card="<div class='fahd-ai-card'><div style='color:#D4AF37;font-weight:900'>"+rankLabel+"</div><img src='"+img+"' alt=''><div style='margin-top:8px'><b>"+String(p.title||"").replace(/</g,"&lt;")+"</b></div><div>📍 "+(p.city||"")+" - "+(p.address||"")+"</div><div style='color:#D4AF37;font-weight:900;font-size:18px'>"+(p.price||"")+" جنيه</div><div>🛏️ "+(p.rooms||"-")+" غرف | 🛁 "+(p.baths||"-")+" حمام | 📐 "+(p.area||"-")+" م²</div><div style='line-height:1.7'>"+salesPitch(r,c)+"</div><div>"+String(p.details||"").slice(0,140)+"</div>"+note+"<div style='margin-top:8px;display:flex;gap:8px'><a href='"+pageUrl+"' target='_blank' style='background:#D4AF37;color:#000;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:900'>🔗 صفحة العقار</a> <a href='"+waLink("أريد الاستفسار عن: "+(p.title||"")+" - "+pageUrl)+"' target='_blank' style='background:#16a34a;color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:900'>📲 واتساب</a></div></div>";
+      var card="<div class='fahd-ai-card'><div style='color:#D4AF37;font-weight:900'>"+rankLabel+"</div><img loading='lazy' src='"+img+"' alt=''><div style='margin-top:8px'><b>"+String(p.title||"").replace(/</g,"&lt;")+"</b></div><div>📍 "+(p.city||"")+" - "+(p.address||"")+"</div><div style='color:#D4AF37;font-weight:900;font-size:18px'>"+(p.price||"")+" جنيه</div><div>🛏️ "+(p.rooms||"-")+" غرف | 🛁 "+(p.baths||"-")+" حمام | 📐 "+(p.area||"-")+" م²</div><div style='line-height:1.7'>"+salesPitch(r,c)+"</div><div>"+String(p.details||"").slice(0,140)+"</div>"+note+"<div style='margin-top:8px;display:flex;gap:8px'><a href='"+pageUrl+"' target='_blank' style='background:#D4AF37;color:#000;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:900'>🔗 صفحة العقار</a> <a href='"+waLink("أريد الاستفسار عن: "+(p.title||"")+" - "+pageUrl)+"' target='_blank' style='background:#16a34a;color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:900'>📲 واتساب</a></div></div>";
       addMsg("bot",card);
     });
     return slice.length;
   }
   async function send(){
     var inp=document.getElementById("fahd-ai-input"); var q=(inp.value||"").trim(); if(!q) return;
-    addMsg("user",q.replace(/</g,"&lt;")); inp.value="";
+    addMsg("user",q.replace(/</g,"&lt;")); inp.value=""; scrollToBottom();
     // تحية - رد بياع واعرض أفضل 3 من غير أسئلة كتير
     if(/^(سلام|اهلا|أهلا|هلا|ازيك|ازيكم|هاي|hi|hello|صباح|مساء|شكرا|ماشي|تمام|اوكي)/i.test(q.trim()) && q.trim().length<20){
       addMsg("bot","أهلاً بيك نورت مكتب الفهد 🌟<br>قولي ميزانيتك والمنطقة اللي بتحبها - وهجيبلك أفضل الخيارات فورا - ولو لسه مش عارف - شوف أحسن 3 عندنا 👇");
@@ -217,7 +244,7 @@
     else if(lastCriteria && (crit.maxPrice||crit.rooms||crit.luxury)) { /* ادمج مع السابق */ crit.area=lastCriteria.area||crit.area; }
     lastCriteria=crit;
     addMsg("bot","تمام - بدرس كل الشقق المتاحة دلوقتي... ⏳");
-    var list=await getAllProps(false);
+    var list=await getAllProps(false); // Fresh: كاش 5 دقائق - بعدها Pagination جديد - مش بيانات قديمة
     if(!list.length){
       addMsg("bot","الشقق لسه بتحمل من الموقع... دوس زر <b>تحديث</b> فوق، أو دوس واتساب والمكتب هيبعتلك كل المتاح فورا.<br><a href='"+waLink("أريد عقار: "+q)+"' target='_blank' style='display:inline-block;background:#16a34a;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;margin-top:8px;font-weight:900'>📲 واتساب المكتب - "+WA_NUM+"</a>");
       return;
@@ -233,12 +260,11 @@
       addMsg("bot","درست <b>"+list.length+" عقار متاح</b> في المكتب - ودي <b>أفضل 3-5 ترشيحات</b> لطلبك - كلهم موجودين فعلا - بأسعارهم الحقيقية 👇");
     }
     var shown=renderCards(ranked, crit, 0, 4);
-    shownCount=shown;
+    shownCount=shown; scrollToBottom();
     // بعد العرض - سؤال المتابعة - مرة واحدة
     addMsg("bot","هل تحب نرتب لك معاينة لأحد هذه العقارات؟ 🤔<br>دوس واتساب وهحجزلك معاينة - أو اكتب <b>اعرض المزيد</b> لو عايز خيارات تانية.<br><a href='"+waLink("أريد ترتيب معاينة - طلبي: "+q)+"' target='_blank' style='display:inline-block;background:#16a34a;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;margin-top:8px;font-weight:900'>📲 واتساب المكتب - "+WA_NUM+"</a>");
   }
   document.addEventListener("DOMContentLoaded",ensureUI);
   if(document.readyState!=="loading") ensureUI();
-  // تحديث بيانات العقارات عند إضافة / تعديل عقار - راقب window.props كل 30 ثانية
-  setInterval(function(){ try{ if(window.props && window.props.length && (!cacheProps || window.props.length!==cacheProps.length)){ cacheProps=null; } }catch(e){} },30000);
+  // لا يوجد تحديث دوري - عشان ما يتقلش الموقع - التحديث بيحصل بس لما العميل يسأل
 })();

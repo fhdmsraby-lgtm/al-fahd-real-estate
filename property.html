@@ -24,6 +24,12 @@
 <title>عقار | مكتب الفهد للعقارات</title>
 <meta name="description" content="تفاصيل العقار - مكتب الفهد للعقارات - واتساب 01040872120">
 <link rel="canonical" href="https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html">
+<!-- Canonical الحقيقي لكل عقار بيتحدد بـ JavaScript تحت: SITE + properties/ID/ - عشان كل عقار له Canonical خاص بيه - والرابط القديم ?prop=ID و ?id=ID لسه شغال -->
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="مكتب الفهد للعقارات">
+<meta property="og:url" content="https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html">
+<noscript><p style="color:#fff">هذه صفحة عقار من مكتب الفهد للعقارات - واتساب 01040872120 - فعّل JavaScript لعرض تفاصيل العقار كاملة.</p></noscript>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>*{box-sizing:border-box}body{margin:0;font-family:-apple-system,system-ui,Tahoma;background:#0A0A0A;color:#fff} .wrap{max-width:760px;margin:auto;padding:14px} .card{background:#151515;border:1px solid #2b2b2b;border-radius:16px;padding:16px;margin:12px 0} .btn{padding:12px 16px;border-radius:10px;font-weight:800;border:none;cursor:pointer;text-decoration:none;display:inline-block;text-align:center} .gold{background:linear-gradient(135deg,#E8C97A,#D4AF37);color:#000} .green{background:#16a34a;color:#fff} img{width:100%;border-radius:12px;display:block;margin:8px 0}</style>
@@ -54,7 +60,11 @@ async function load(){
     document.title=(p.title||"عقار")+" - "+(p.city||"")+" | مكتب الفهد للعقارات";
     var imgs=(p.images&&p.images.length?p.images:(p.image?[p.image]:[]));
     var imgsHtml=imgs.map(function(u){return '<img src="'+u+'" alt="'+esc(p.title)+'">';}).join("");
-    var schema={"@context":"https://schema.org","@type":"RealEstateListing","name":p.title,"description":p.details||p.title,"url":location.href,"image":imgs,"offers":{"@type":"Offer","price":num(p.price),"priceCurrency":"EGP","availability":isSold?"https://schema.org/OutOfStock":"https://schema.org/InStock"},"address":{"@type":"PostalAddress","addressLocality":p.city||"القاهرة","streetAddress":p.address||"","addressCountry":"EG"},"numberOfRooms":num(p.rooms),"numberOfBathroomsTotal":num(p.baths),"floorSize":{"@type":"QuantitativeValue","value":num(p.area),"unitCode":"MTK"}};
+    var schema={"@context":"https://schema.org","@type":"RealEstateListing","name":p.title,"description":p.details||p.title,"url":canonUrl,"image":imgs,"offers":{"@type":"Offer","price":num(p.price),"priceCurrency":"EGP","availability":isSold?"https://schema.org/OutOfStock":"https://schema.org/InStock"},"address":{"@type":"PostalAddress","addressLocality":p.city||"القاهرة","streetAddress":p.address||"","addressCountry":"EG"},"numberOfRooms":num(p.rooms),"numberOfBathroomsTotal":num(p.baths),"floorSize":{"@type":"QuantitativeValue","value":num(p.area),"unitCode":"MTK"}};
+    // v2 - Canonical + OG + robots لكل عقار لوحده - الرابط الرسمي = /properties/ID/
+    var canonUrl="https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/properties/"+encodeURIComponent(id)+"/";
+    (function(){ var l=document.querySelector('link[rel="canonical"]'); if(!l){ l=document.createElement("link"); l.setAttribute("rel","canonical"); document.head.appendChild(l); } l.setAttribute("href",canonUrl); })();
+    (function(){ function setM(sel,attr,val,c){ var el=document.querySelector(sel); if(!el){ el=document.createElement("meta"); el.setAttribute(attr,val); document.head.appendChild(el); } el.setAttribute("content",c); } setM('meta[property="og:url"]',"property","og:url",canonUrl); setM('meta[property="og:title"]',"property","og:title",(p.title||"عقار")+" - "+(p.city||"")+" | مكتب الفهد للعقارات"); setM('meta[property="og:description"]',"property","og:description","عقار في "+(p.city||"")+" - "+(p.price||"")+" جنيه - "+(p.area||"")+" م² - "+(p.rooms||"-")+" غرف - واتساب 01040872120"); var _img=(p.images&&p.images[0])||p.image||"logo.jpeg"; setM('meta[property="og:image"]',"property","og:image",_img); var _r=document.querySelector('meta[name="robots"]'); if(!_r){ _r=document.createElement("meta"); _r.setAttribute("name","robots"); document.head.appendChild(_r); } _r.setAttribute("content", isSold ? "noindex, follow" : "index, follow"); var _d=document.querySelector('meta[name="description"]'); if(!_d){ _d=document.createElement("meta"); _d.setAttribute("name","description"); document.head.appendChild(_d); } _d.setAttribute("content","عقار - "+(p.title||"")+" في "+(p.city||"")+" - "+(p.price||"")+" جنيه - "+(p.area||"")+" م² - "+(p.rooms||"-")+" غرف - واتساب 01040872120 - مكتب الفهد."); })();
     var sc=document.createElement("script"); sc.type="application/ld+json"; sc.textContent=JSON.stringify(schema); document.head.appendChild(sc);
     document.getElementById("box").innerHTML=
       '<h1 style="color:#D4AF37">'+esc(p.title)+'</h1>'
