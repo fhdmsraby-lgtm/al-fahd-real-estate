@@ -1,0 +1,29 @@
+User-agent: Googlebot
+Allow: /
+Allow: /properties/
+Allow: /property.html
+
+User-agent: Bingbot
+Allow: /
+Allow: /properties/
+Allow: /property.html
+
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /properties/
+Allow: /property.html
+
+# GPTBot = تدريب النماذج فقط - ممنوع - من غير ما نمنع OAI-SearchBot بتاع البحث
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /private/
+
+Sitemap: https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/sitemap.xml

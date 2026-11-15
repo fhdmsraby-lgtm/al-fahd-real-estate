@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AL FAHD - Sitemap - المرحلة 1 -->
+<!-- ده ملف البداية. الملف الكامل بيتولد تلقائيا من fahd-sitemap.js في لوحة الإدارة -->
+<!-- وبيحتوي على العقارات المتاحة فقط - المباع / المؤجر / قيد المراجعة مش بيتضاف -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- باقي الروابط بتتولد تلقائيا لكل عقار متاح - مثال: -->
+  <!-- <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/properties/apartment-123/</loc></url> -->
+</urlset>

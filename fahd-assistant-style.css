@@ -1,0 +1,16 @@
+/* AL FAHD - Assistant - Modular - لا يغير تصميم الموقع */
+#fahd-ai-btn{position:fixed;bottom:18px;left:18px;z-index:9999;background:linear-gradient(135deg,#E8C97A,#D4AF37);color:#000;border:none;border-radius:50px;padding:13px 18px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.45);font-family:inherit}
+#fahd-ai-box{position:fixed;bottom:76px;left:12px;right:12px;max-width:420px;z-index:9999;background:#111;border:2px solid #D4AF37;border-radius:16px;overflow:hidden;display:none;box-shadow:0 12px 32px rgba(0,0,0,.5);font-family:inherit;direction:rtl}
+@media(min-width:768px){#fahd-ai-box{left:18px;right:auto;width:420px}}
+#fahd-ai-head{background:#000;color:#D4AF37;padding:12px 14px;font-weight:900;display:flex;justify-content:space-between;align-items:center}
+#fahd-ai-msgs{height:360px;overflow-y:auto;padding:12px;background:#151515;color:#fff;font-size:14px;line-height:1.7}
+.fahd-ai-msg{margin:8px 0;padding:10px 12px;border-radius:12px;max-width:92%}
+.fahd-ai-msg.bot{background:#1e1e1e;border:1px solid #333}
+.fahd-ai-msg.user{background:#D4AF37;color:#000;margin-right:auto;text-align:left}
+.fahd-ai-card{background:#1e1e1e;border:1px solid #D4AF37;border-radius:12px;padding:10px;margin:8px 0;color:#fff}
+.fahd-ai-card img{width:100%;height:160px;object-fit:cover;border-radius:10px}
+.fahd-ai-card b{color:#D4AF37}
+#fahd-ai-input-row{display:flex;gap:8px;padding:10px;background:#000}
+#fahd-ai-input{flex:1;padding:12px;background:#1e1e1e;border:1px solid #333;color:#fff;border-radius:10px;font-size:15px}
+#fahd-ai-send{background:#16a34a;color:#fff;border:none;padding:12px 16px;border-radius:10px;font-weight:900;cursor:pointer}
+.fahd-ai-chip{display:inline-block;background:#222;border:1px solid #D4AF37;color:#D4AF37;padding:6px 10px;border-radius:20px;font-size:12px;margin:3px;cursor:pointer}
