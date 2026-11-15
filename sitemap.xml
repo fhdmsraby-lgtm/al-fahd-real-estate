@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- AL FAHD - Sitemap v2 - Pagination + Sitemap Index -->
-<!-- مهم: الملف الكامل بيتولد من fahd-sitemap.js في لوحة الإدارة: fahdGenerateSitemaps() -->
-<!-- بعد ما تضيف / تعدل عقارات - شغل الدالة في الإدارة - وانسخ الناتج هنا - عشان Sitemap يفضل محدث -->
-<!-- GitHub Pages موقع ثابت - مفيش توليد تلقائي من السيرفر - التوليد من الإدارة هو الحل المجاني الصح -->
+<!-- AL FAHD - Sitemap v2.1 - مطابق لناتج المولد fahdGenerateSitemaps() - الرابط الرسمي = property.html?id=ID -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/</loc><lastmod>2026-11-15</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html</loc><lastmod>2026-11-15</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <!-- باقي روابط العقارات المتاحة بتتولد من fahd-sitemap.js - كل رابط = /properties/ID/ - المباع / المؤجر / المحجوز / المسودات / قيد المراجعة مستبعد -->
+  <!-- باقي روابط العقارات المتاحة بتتولد من الإدارة - كل رابط = property.html?id=ID -->
 </urlset>

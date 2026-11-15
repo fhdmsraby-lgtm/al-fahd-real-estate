@@ -17,17 +17,12 @@
   var cacheProps=null, cacheTime=0, lastResults=[], lastCriteria=null, shownCount=0, convo={budget:null,area:null,rooms:null,deal:null};
   function num(v){ var n=parseFloat(String(v||"").replace(/[^0-9.]/g,"")); return isNaN(n)?0:n; }
   function fmtPrice(n){ if(!n) return ""; if(n>=1000000){ var m=n/1000000; return (m%1===0?String(m):m.toFixed(2).replace(/\.0$/,""))+" مليون جنيه"; } return n.toLocaleString("en-US")+" جنيه"; }
-  function isAvailable(p){
-    var s=String(p.status||"متاح");
-    if(/قيد المراجعة|معلق|مرفوض|مسودة|قيد/i.test(s)) return false;
-    if(/مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false;
-    return true;
-  }
+  function isAvailable(p){ var s=String(p.status||"متاح"); if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد|مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false; return true; }
   function clean(s){ return String(s||"").toLowerCase(); }
   function hayOf(p){ return clean((p.title||"")+" "+(p.city||"")+" "+(p.address||"")+" "+(p.type||"")+" "+(p.details||"")+" "+(p.compound||"")+" "+(p.stage||"")+" "+(p.group||"")+" "+(p.finish||p.finishing||"")+" "+(p.floor||p.door||"")); }
   // --- آلية موحدة لجلب كل العقارات - Pagination + Fresh - تستخدم fahd-core-fix.js لو موجود ---
   async function getAllProps(force){
-    // 1) لو fahd-core موجود - استخدمه: Pagination كامل + كاش 5 دقائق + dedup by doc id - مش limit(200)
+    // 1) لو fahd-core موجود - استخدمه: Pagination كامل + كاش 5 دقائق + dedup by doc id - مش limit(100/200)
     try{
       if(typeof window.fahdFetchAllProps==="function"){
         var all=await window.fahdFetchAllProps({force:!!force});
@@ -37,7 +32,7 @@
         return avail;
       }
     }catch(e){}
-    // 2) Fallback لو fahd-core مش متحمل: Pagination مباشرة هنا - نفس المنطق - من غير limit(200)
+    // 2) Fallback لو fahd-core مش متحمل: Pagination مباشرة هنا - نفس المنطق - من غير limit(100/200)
     if(cacheProps && !force && (Date.now()-cacheTime<5*60*1000)) return cacheProps;
     var map={};
     function add(list){ (list||[]).forEach(function(p){ if(!p) return; var id=p._id||p.id||""; var k=id||((p.title||"")+"|"+(p.price||"")+"|"+(p.address||"")); if(!seenCheck(k)){ map[k]=Object.assign({},p,{_id:id||k}); } }); }

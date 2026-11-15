@@ -23,13 +23,8 @@
   }
   function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function num(v){ var n=parseFloat(String(v||"").replace(/[^0-9.]/g,"")); return isNaN(n)?0:n; }
-  function isAvailable(p){
-    var s=String(p.status||"متاح");
-    if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد/i.test(s)) return false;
-    if(/مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false;
-    return true;
-  }
-  function propUrl(id){ if(typeof window.fahdPropUrl==="function") return window.fahdPropUrl(id); return SITE+"properties/"+encodeURIComponent(id)+"/"; }
+  function isAvailable(p){ var s=String(p.status||"متاح"); if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد|مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false; return true; }
+  function propUrl(id){ if(typeof window.fahdPropUrl==="function") return window.fahdPropUrl(id); return SITE+"property.html?id="+encodeURIComponent(id); }
   // Homepage SEO - افتراضي
   setMeta('meta[name="description"]',"name","description","مكتب الفهد للعقارات - شقق وفيلات للبيع والإيجار في التجمع الأول والخامس، الرحاب، مدينتي، الشروق، مصر الجديدة، المعادي، 6 أكتوبر - مباشر مع المالك.");
   setMeta('meta[property="og:title"]',"property","og:title","مكتب الفهد للعقارات | AL FAHD REAL ESTATE");

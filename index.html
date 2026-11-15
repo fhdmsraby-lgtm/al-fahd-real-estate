@@ -150,10 +150,38 @@ let props=[], ownerImgs=[];
 function show(v,btn){document.querySelectorAll('.view').forEach(e=>e.classList.add('hidden')); document.getElementById('v-'+v).classList.remove('hidden'); document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); window.scrollTo(0,0); if(v==='properties') renderProps();}
 function compressImg(file){ return new Promise(res=>{ let r=new FileReader(); r.onload=e=>{ let img=new Image(); img.onload=()=>{ let c=document.createElement('canvas'); let max=550; let w=img.width,h=img.height; if(w>max){h=h*max/w;w=max;} c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h); res(c.toDataURL('image/jpeg',0.35)); }; img.src=e.target.result; }; r.readAsDataURL(file); }); }
 document.getElementById('oImgFile').addEventListener('change', async e=>{ let files=[...e.target.files].slice(0,7); ownerImgs=[]; let grid=document.getElementById('oPreviewGrid'); grid.innerHTML='جارٍ ضغط الصور...'; for(let f of files){ ownerImgs.push(await compressImg(f)); } grid.innerHTML=ownerImgs.map(d=>'<img src="'+d+'" style="width:70px;height:70px;object-fit:cover;border-radius:8px">').join(''); document.getElementById('oImgCount').textContent='تم اختيار '+ownerImgs.length+' / 7 صور'; });
-function propLink(id){ return location.origin + location.pathname + '?prop=' + id; }
+function propLink(id){ if(typeof window.fahdPropUrl==='function') return window.fahdPropUrl(id); return location.origin + location.pathname.replace(/index\.html$/,'') + 'property.html?id=' + encodeURIComponent(id); }
 function shareWhatsApp(id){ let p=props.find(x=>x._id===id); if(!p) return; let url=propLink(id); let txt=encodeURIComponent('شوف الشقة دي من موقع الفهد للعقارات: '+(p.title||'')+' - '+(p.price||'')+' جنيه\n'+url); window.open('https://wa.me/?text='+txt,'_blank'); }
-function checkDeepLink(){ let id=new URLSearchParams(location.search).get('prop'); if(!id) return; setTimeout(()=>{ let p=props.find(x=>x._id===id); if(!p) return; show('properties',document.querySelector('[data-v=properties]')); setTimeout(()=>{ let el=document.getElementById('propsList'); if(el) el.innerHTML=cardHTML(p); let h=document.querySelector('#v-properties h2'); if(h) h.textContent='الشقة اللي اخترتها 🏠'; },300); },400); }
-async function loadProps(){ let homeEl=document.getElementById('homeProps'); if(homeEl) homeEl.innerHTML='<div style="text-align:center;padding:20px;color:#D4AF37">⏳ جاري تحميل الشقق...</div>'; try{ if(!db) throw new Error('no db'); let s=null; try{ s=await db.collection('properties').orderBy('createdAt','desc').limit(100).get(); }catch(e1){ s=await db.collection('properties').limit(100).get(); } props=[]; s.forEach(d=>{let v=d.data(); v._id=d.id; props.push(v);}); props.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))); renderProps(); renderHomeProps(true); checkDeepLink(); }catch(e){ let shown=false; try{ let c=JSON.parse(localStorage.getItem('fahdPropsCache')||'null'); if(c && c.props && c.props.length){ props=c.props; renderProps(); renderHomeProps(true); shown=true; } }catch(err){} if(!shown){ if(homeEl) homeEl.innerHTML='<div style="text-align:center;line-height:1.8">⚠️ الشقق ما حملتش - دوس حاول تاني</div><button class="btn gold" style="width:100%;margin-top:10px" onclick="loadProps()">🔄 حاول تاني</button>'; } } }
+function checkDeepLink(){ let _sp=new URLSearchParams(location.search); let id=_sp.get('prop')||_sp.get('id'); if(!id) return; setTimeout(()=>{ let p=props.find(x=>x._id===id); if(!p) return; show('properties',document.querySelector('[data-v=properties]')); setTimeout(()=>{ let el=document.getElementById('propsList'); if(el) el.innerHTML=cardHTML(p); let h=document.querySelector('#v-properties h2'); if(h) h.textContent='الشقة اللي اخترتها 🏠'; },300); },400); }
+async function loadProps(){
+  let homeEl=document.getElementById('homeProps'); if(homeEl) homeEl.innerHTML='<div style="text-align:center;padding:20px;color:#D4AF37">⏳ جاري تحميل الشقق...</div>';
+  try{
+    if(!db) throw new Error('no db');
+    let all=[];
+    if(typeof window.fahdFetchAllProps==='function'){ all=await window.fahdFetchAllProps({}); }
+    else {
+      let seen={}; let lastDoc=null; let guard=0;
+      while(guard<50){ guard++;
+        let q=db.collection('properties').orderBy('__name__').limit(500);
+        if(lastDoc) q=q.startAfter(lastDoc);
+        let s=null;
+        try{ s=await q.get(); }catch(e){ try{ let q2=db.collection('properties').limit(500); if(lastDoc) q2=q2.startAfter(lastDoc); s=await q2.get(); }catch(e2){ break; } }
+        if(!s||s.empty) break;
+        s.forEach(d=>{ if(!seen[d.id]){ seen[d.id]=1; let v=d.data(); v._id=d.id; all.push(v); } });
+        if(s.size<500) break;
+        lastDoc=s.docs[s.docs.length-1];
+      }
+    }
+    props=all.slice();
+    props.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+    try{ localStorage.setItem('fahdPropsCache', JSON.stringify({props:props, updatedAt:new Date().toISOString()})); }catch(e){}
+    renderProps(); renderHomeProps(true); checkDeepLink();
+  }catch(e){
+    let shown=false;
+    try{ let c=JSON.parse(localStorage.getItem('fahdPropsCache')||'null'); if(c && c.props && c.props.length){ props=c.props; renderProps(); renderHomeProps(true); shown=true; } }catch(err){}
+    if(!shown){ if(homeEl) homeEl.innerHTML='<div style="text-align:center;line-height:1.8">⚠️ الشقق ما حملتش - دوس حاول تاني</div><button class="btn gold" style="width:100%;margin-top:10px" onclick="loadProps()">🔄 حاول تاني</button>'; }
+  }
+}
 
 function galImgs(id){ let p=props.find(x=>x._id===id); if(!p) return []; return (p.images&&p.images.length?p.images:(p.image?[p.image]:[])); }
 function galShow(id,idx){ let imgs=galImgs(id); if(!imgs.length) return; idx=((idx%imgs.length)+imgs.length)%imgs.length; let main=document.getElementById('gal-'+id+'-main'); let cnt=document.getElementById('gal-'+id+'-count'); let wrap=document.getElementById('gal-'+id); if(main) main.src=imgs[idx]; if(cnt) cnt.textContent=(idx+1)+' / '+imgs.length; if(wrap) wrap.dataset.idx=idx; let dots=document.getElementById('gal-'+id+'-dots'); if(dots) dots.innerHTML=imgs.map((_,i)=>'<span style="display:inline-block;width:'+(i===idx?10:7)+'px;height:7px;border-radius:10px;background:'+(i===idx?'#D4AF37':'#555')+';margin:0 2px"></span>').join(''); }
@@ -176,7 +204,7 @@ loadProps();
 <div id="guideModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;overflow:auto;padding:12px"><div style="max-width:520px;margin:20px auto;position:relative"><button onclick="document.getElementById('guideModal').style.display='none'" style="position:absolute;top:8px;left:8px;z-index:2;background:#000;color:#fff;border:2px solid #D4AF37;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer">✕</button><img src="guide.jpeg" style="width:100%;border-radius:16px;border:2px solid #D4AF37;display:block"><button onclick="document.getElementById('guideModal').style.display='none'" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#E8C97A,#D4AF37);color:#000;font-weight:900;padding:14px;border:none;border-radius:10px;font-size:16px">تمام - فهمت ✕ اقفل</button></div></div>
 
 
-<!-- AL FAHD - Hook v2 - VERIFIED - الروابط محطوطة هنا - مرة واحدة بس - لا تحذفها -->
+<!-- AL FAHD - Hook v2.1 - VERIFIED - core قبل المساعد - مرة واحدة بس -->
 <script src="fahd-core-fix.js"></script>
 <script src="fahd-seo.js"></script>
 <script src="fahd-assistant-chat.js"></script>

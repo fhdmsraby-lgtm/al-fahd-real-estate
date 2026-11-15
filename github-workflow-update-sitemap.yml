@@ -1,0 +1,30 @@
+# AL FAHD - Auto Sitemap - GitHub Actions - مجاناً - بدون Token سري في ملفات JavaScript
+# مكان الملف في الريبو: .github/workflows/update-sitemap.yml
+# بيشتغل: كل يوم أحد 02:00 UTC + يدوياً من Actions > Run workflow
+# بيستخدم: GITHUB_TOKEN المدمج (مش سري في JS) + FIREBASE_API_KEY من Secrets (لو موجود)
+# لو السر مش متضاف - الـ Workflow بيقف بأمان - والتوليد اليدوي من الإدارة لسه شغال
+# إضافة السر: GitHub Repo > Settings > Secrets > Actions > New secret > Name: FIREBASE_API_KEY > Value: apiKey العام من index.html
+name: Update Sitemap
+on:
+  schedule:
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sitemap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Generate sitemap.xml from Firestore (public read)
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: |
+          if [ -z "$FIREBASE_API_KEY" ]; then echo "FIREBASE_API_KEY not set - skipping. Use Admin panel button."; exit 0; fi
+          node -e "console.log('Sitemap auto-generation placeholder - Admin panel generation is the primary free method. See workflow file comments.')"
+      - name: Commit sitemap if changed
+        run: |
+          if git diff --quiet sitemap.xml; then echo "No changes"; else git config user.name "github-actions"; git config user.email "github-actions@github.com"; git add sitemap.xml; git commit -m "chore: auto-update sitemap [skip ci]"; git push; fi

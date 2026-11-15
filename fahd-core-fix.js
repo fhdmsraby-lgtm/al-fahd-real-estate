@@ -9,17 +9,12 @@
   var SITE="https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/";
   window.FAHD_SITE=SITE;
   // الرابط الموحد الرسمي - يستخدمه المساعد + SEO + Sitemap + property.html
-  window.fahdPropUrl=function(id){ return SITE+"properties/"+encodeURIComponent(String(id||""))+"/"; };
-  window.fahdLegacyPropUrl=function(id){ return SITE+"?prop="+encodeURIComponent(String(id||"")); };
+  window.fahdPropUrl=function(id){ return SITE+"property.html?id="+encodeURIComponent(String(id||"")); };
+  window.fahdLegacyPropUrl=function(id){ return SITE+"properties/"+encodeURIComponent(String(id||""))+"/"; };
   // هل العقار متاح فعلا؟ - يستبعد المباع / المؤجر / المحجوز / المسودات / قيد المراجعة
-  window.fahdIsAvailable=function(p){
-    if(!p) return false;
-    var s=String(p.status||"متاح");
-    if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد/i.test(s)) return false;
-    if(/مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز|محجوزة/i.test(s)) return false;
-    return true;
-  };
+  window.fahdIsAvailable=function(p){ if(!p) return false; var s=String(p.status||"متاح"); if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد|مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false; return true; };
   var _cache=null,_cacheTime=0,_inflight=null;
+  window.fahdClearPropsCache=function(){ _cache=null; _cacheTime=0; try{ localStorage.removeItem('fahdPropsCache'); }catch(e){} };
   var CACHE_TTL=5*60*1000; // 5 دقائق - توازن بين Fresh و Free quota
   // جلب كل العقارات بـ Pagination - يعمل مع Firestore compat الموجود في index
   async function fetchAllFromFirestore(){

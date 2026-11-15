@@ -10,7 +10,7 @@
 */
 async function fahdGenerateSitemaps(){
   var SITE="https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/";
-  function isAvail(p){ var s=String((p&&p.status)||"متاح"); if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد/i.test(s)) return false; if(/مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false; return true; }
+  function isAvail(p){ var s=String((p&&p.status)||"متاح"); if(/قيد المراجعة|معلق|مرفوض|مسودة|مسوده|قيد|مباع|تم البيع|مؤجر|تم التأجير|غير متاح|متوقف|محجوز|تم حجز/i.test(s)) return false; return true; }
   function escXml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
   var all=[], seen={};
   var lastDoc=null, guard=0;
@@ -35,7 +35,7 @@ async function fahdGenerateSitemaps(){
   function wrap(urls){ return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+urls.join("\n")+"\n</urlset>"; }
   if(avail.length<=900){
     var urls=[urlEntry(SITE, today, "daily", "1.0"), urlEntry(SITE+"property.html", today, "weekly", "0.7")];
-    avail.forEach(function(p){ urls.push(urlEntry(SITE+"properties/"+p._id+"/", (String(p.createdAt||"").slice(0,10)||today), "weekly", "0.8")); });
+    avail.forEach(function(p){ urls.push(urlEntry(SITE+"property.html?id="+encodeURIComponent(p._id), (String(p.createdAt||"").slice(0,10)||today), "weekly", "0.8")); });
     files["sitemap.xml"]=wrap(urls);
     files["sitemap-index.xml"]='<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <sitemap><loc>'+SITE+'sitemap.xml</loc><lastmod>'+today+'</lastmod></sitemap>\n</sitemapindex>';
   } else {
@@ -46,7 +46,7 @@ async function fahdGenerateSitemaps(){
       var name="sitemap-properties-"+(idx+1)+".xml";
       var urls=[];
       if(idx===0){ urls.push(urlEntry(SITE, today, "daily", "1.0")); urls.push(urlEntry(SITE+"property.html", today, "weekly", "0.7")); }
-      chunk.forEach(function(p){ urls.push(urlEntry(SITE+"properties/"+p._id+"/", (String(p.createdAt||"").slice(0,10)||today), "weekly", "0.8")); });
+      chunk.forEach(function(p){ urls.push(urlEntry(SITE+"property.html?id="+encodeURIComponent(p._id), (String(p.createdAt||"").slice(0,10)||today), "weekly", "0.8")); });
       files[name]=wrap(urls);
       indexEntries.push("  <sitemap><loc>"+SITE+name+"</loc><lastmod>"+today+"</lastmod></sitemap>");
     });
