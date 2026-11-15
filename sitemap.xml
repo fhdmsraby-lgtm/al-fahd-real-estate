@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- AL FAHD - Sitemap v2.1 - مطابق لناتج المولد fahdGenerateSitemaps() - الرابط الرسمي = property.html?id=ID -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/</loc><lastmod>2026-11-15</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html</loc><lastmod>2026-11-15</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <!-- باقي روابط العقارات المتاحة بتتولد من الإدارة - كل رابط = property.html?id=ID -->
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=Pwxle5ltyODSNsQhOhWL</loc><lastmod>2026-11-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=0C3P1cuZi1wmqOucA9p9</loc><lastmod>2026-11-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=1TLK5ixNnoxPAqalqSly</loc><lastmod>2026-11-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=lcwUD5MwKL8ckzvztYcq</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=UP4FJzd2WibvTq21tkdt</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=RTFhYBG4rblDpHMitPhZ</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=H2BZ4diy1nr2Vdzv4Noy</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=z0ZX8s4gTYWirJgFy6eP</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=CoVB8JFa04QW4sqkZbXV</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fhdmsraby-lgtm.github.io/al-fahd-real-estate/property.html?id=Jj8BKmtPyptsJa9UjWG1</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>
