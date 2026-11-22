@@ -2,7 +2,7 @@
    لا يغير تصميم ولا أقسام ولا إدارة ولا أسعار. ملف مستقل - لو اتشال الموقع بيرجع زي ما هو.
    1) Pagination: يجلب كل العقارات من Firestore مهما زاد عددها - 500 في كل صفحة - startAfter - من غير تكرار (dedup by doc id) - من غير فقدان
    2) Fresh: كاش 5 دقائق بس - بعدها يجلب جديد - مش بيانات قديمة
-   3) Unified links: الرابط الرسمي Canonical = SITE + properties/ID/ - والرابط القديم ?prop=ID و ?id=ID لسه شغال وبيتحول للرسمي في Canonical - مش بيتكسر
+   3) Unified links: الرابط الرسمي Canonical = SITE + property.html?id=ID - والرابط القديم ?prop=ID لسه شغال للتوافق
    4) Free quota: لا استعلامات متكررة - يجلب مرة واحدة ويخزن - ولا polling
 */
 (function(){
@@ -77,7 +77,7 @@
         if(!l){ l=document.createElement("link"); l.setAttribute("rel","canonical"); document.head.appendChild(l); }
         l.setAttribute("href", window.fahdPropUrl(legacy));
       }
-      // ربط ?prop= القديم بـ /properties/ - لو المستخدم فتح الرابط القديم - الصفحة لسه بتشتغل - و Canonical هو الرسمي
+      // دعم ?prop= القديم للتوافق - والـ Canonical الرسمي هو property.html?id=ID
     }catch(e){}
   });
 })();
