@@ -9,6 +9,9 @@ on:
       - "admin.html"
       - "index.html"
       - "property.html"
+      - "robots.txt"
+      - "sitemap.xml"
+      - ".nojekyll"
       - "scripts/generate-sitemap.mjs"
       - ".github/workflows/update-sitemap.yml"
 permissions:
