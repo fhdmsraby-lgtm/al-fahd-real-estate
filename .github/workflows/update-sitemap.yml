@@ -4,7 +4,7 @@ on:
     - cron: "17 */6 * * *"
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, seo/static-property-pages]
     paths:
       - "admin.html"
       - "index.html"
