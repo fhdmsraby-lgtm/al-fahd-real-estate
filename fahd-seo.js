@@ -1,6 +1,6 @@
 /* AL FAHD - SEO v2 - Per-property + Unified Canonical + OG + Schema.org
    لا يغير تصميم ولا وظائف. ملف مستقل - لو اتشال الموقع بيرجع زي ما هو.
-   التوحيد: الرابط الرسمي Canonical = SITE + properties/ID/ - لكل العقارات
+   التوحيد: الرابط الرسمي Canonical = SITE + property.html?id=ID - لكل العقارات
    الرابط القديم ?prop=ID و ?id=ID لسه شغال - لكن Canonical يشاور للرسمي - عشان Google ما يعتبرهم صفحتين مكررتين
    لو العقار مباع / مؤجر / محجوز / قيد المراجعة: robots = noindex - مش يظهر كمتاح
 */

@@ -25,7 +25,7 @@
   var m=path.match(/\/properties\/([^\/]+)/);
   var base=path.split("/al-fahd-real-estate/")[0]+"/al-fahd-real-estate/";
   if(path.indexOf("al-fahd-real-estate")==-1) base="/";
-  // /properties/ID/ هو رابط مختصر - 404 بتحوله لـ property.html?id=ID عشان يعرض العقار - والـ Canonical في property.html هو /properties/ID/ - فالرابط الرسمي محفوظ
+  // /properties/ID/ هو رابط مختصر - 404 بتحوله لـ property.html?id=ID عشان يعرض العقار - والـ Canonical الرسمي هو property.html?id=ID
   if(m){ location.replace(base+"property.html?id="+encodeURIComponent(decodeURIComponent(m[1]))); }
   else { location.replace(base); }
 })();

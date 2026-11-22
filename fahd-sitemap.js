@@ -5,7 +5,7 @@
    - يستبعد المباع / المؤجر / المحجوز / المسودات / قيد المراجعة
    - لو العقارات <= 900: ملف sitemap.xml واحد
    - لو أكتر: Sitemap Index + ملفات sitemap-properties-1.xml, -2.xml ... كل ملف 1000 رابط (أمان أقل من حد Google 50000)
-   - كل رابط = SITE + properties/ID/ - الرابط الرسمي - مش ?prop=
+   - كل رابط = SITE + property.html?id=ID - الرابط الرسمي الموحد
    - انسخ الناتج والصقه في GitHub - ملفات sitemap.xml / sitemap-index.xml / sitemap-properties-N.xml
 */
 async function fahdGenerateSitemaps(){
