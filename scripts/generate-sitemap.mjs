@@ -18,5 +18,5 @@ all.sort((a,b)=>b.lastmod.localeCompare(a.lastmod));const today=new Date().toISO
 if(chunks.length<=45){files.set("sitemap.xml",urlset([entry(site,today,"daily","1.0"),entry(site+"property.html",today,"weekly","0.7"),...all.map(p=>entry(site+"property.html?id="+encodeURIComponent(p.id),p.lastmod,"weekly","0.8"))]));files.set("sitemap-index.xml",indexXml(["sitemap.xml"],today));}
 else{const names=[];chunks.forEach((chunk,i)=>{const n=`sitemap-properties-${i+1}.xml`;names.push(n);const items=chunk.map(p=>entry(site+"property.html?id="+encodeURIComponent(p.id),p.lastmod,"weekly","0.8"));if(i===0)items.unshift(entry(site,today,"daily","1.0"),entry(site+"property.html",today,"weekly","0.7"));files.set(n,urlset(items));});const ix=indexXml(names,today);files.set("sitemap.xml",ix);files.set("sitemap-index.xml",ix);}
 for(const [n,c] of files)await writeFile(n,c,"utf8");
-for(const n of await readdir("."))if(/^sitemap-properties-\\d+\\.xml$/.test(n)&&!files.has(n))await unlink(n);
+for(const n of await readdir("."))if(/^sitemap-properties-\d+\.xml$/.test(n)&&!files.has(n))await unlink(n);
 console.log(`Generated ${all.length} available property URLs; files: ${[...files.keys()].join(", ")}`);
