@@ -1,4 +1,4 @@
-name: Update real-estate sitemap
+name: Generate static property pages and sitemap
 on:
   schedule:
     - cron: "17 */6 * * *"
@@ -9,13 +9,12 @@ on:
       - "admin.html"
       - "index.html"
       - "property.html"
-      - "fahd-sitemap.js"
       - "scripts/generate-sitemap.mjs"
       - ".github/workflows/update-sitemap.yml"
 permissions:
   contents: write
 concurrency:
-  group: update-real-estate-sitemap
+  group: generate-static-property-pages
   cancel-in-progress: false
 jobs:
   generate:
@@ -25,18 +24,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Generate sitemap from Firestore
+      - name: Fetch all public properties from Firestore and render static HTML
         env:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         run: node scripts/generate-sitemap.mjs
-      - name: Commit sitemap changes
+      - name: Commit generated property pages and sitemap
         run: |
-          if git diff --quiet -- sitemap.xml sitemap-index.xml 'sitemap-properties-*.xml'; then
-            echo "Sitemap is already up to date."
+          if git diff --quiet -- sitemap.xml sitemap-index.xml 'sitemap-properties-*.xml' properties; then
+            echo "Static property pages and sitemap are already up to date."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "chore(seo): refresh property sitemap [skip ci]"
+          git commit -m "chore(seo): generate static property pages [skip ci]"
           git push
