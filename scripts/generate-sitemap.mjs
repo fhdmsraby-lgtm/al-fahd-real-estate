@@ -144,6 +144,14 @@ for (const { id, property, lastmod } of properties) {
   const loc = site + "properties/" + encodeURIComponent(id) + "/";
   urls.push('  <url><loc>' + escapeHtml(loc) + '</loc><lastmod>' + lastmod + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>');
 }
+const directoryItems = properties.map(({ id, property }) => {
+  const loc = site + "properties/" + encodeURIComponent(id) + "/";
+  const label = [property.title || "عقار", property.city || property.area || "القاهرة", property.type || ""].filter(Boolean).join(" - ");
+  return '<li><a href="' + escapeHtml(loc) + '">' + escapeHtml(label) + '</a></li>';
+}).join("\n");
+const directoryPage = '<!doctype html>\n<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>دليل العقارات المتاحة | مكتب الفهد للعقارات</title><meta name="description" content="تصفح دليل الشقق والعقارات المعروضة للبيع والإيجار في القاهرة ومناطقها من مكتب الفهد للعقارات."><link rel="canonical" href="' + site + 'property-index.html"></head><body style="font-family:Tahoma,Arial,sans-serif;max-width:900px;margin:30px auto;padding:16px;line-height:2"><h1>دليل العقارات المتاحة - مكتب الفهد للعقارات</h1><p><a href="' + site + '">العودة إلى الرئيسية</a></p><ul>' + directoryItems + '</ul></body></html>';
+await writeFile("property-index.html", directoryPage, "utf8");
+urls.push('  <url><loc>' + site + 'property-index.html</loc><lastmod>' + today + '</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>');
 const urlset = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.join("\n") + '\n</urlset>\n';
 await writeFile("sitemap.xml", urlset, "utf8");
 await writeFile("sitemap-index.xml", '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><sitemap><loc>' + site + 'sitemap.xml</loc><lastmod>' + today + '</lastmod></sitemap></sitemapindex>\n', "utf8");
