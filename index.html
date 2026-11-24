@@ -162,17 +162,23 @@ function fahdFilterPublic(list){ return list.filter(function(p){
   if(a===false||a===0||a==='pending'||a==='قيد المراجعة'||a==='مرفوض') return false;
   return true;
 }); }
-async function loadProps(){
+async function loadProps(options){
+  const forceRefresh = !!(options && options.force);
+  let cacheIsFresh = false;
   let homeEl=document.getElementById('homeProps');
   // 1) الكاش فوراً - لو موجود - اعرضه - من غير انتظار
   try{
     let c=JSON.parse(localStorage.getItem('fahdPropsCache')||'null');
     if(c && c.props && c.props.length){
+      const cachedAt = Date.parse(c.updatedAt || '');
+      cacheIsFresh = Number.isFinite(cachedAt) && (Date.now() - cachedAt) < 5 * 60 * 1000;
       props=fahdFilterPublic(c.props);
       props.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
       renderProps(); renderHomeProps(true);
     }
   }catch(e){}
+  // استخدم الكاش الحديث عند الرجوع من صفحة عقار؛ لا تعِد طلب البيانات كل مرة.
+  if(cacheIsFresh && !forceRefresh) return;
   if(homeEl && (!props || !props.length)) homeEl.innerHTML='<div style="text-align:center;padding:20px;color:#D4AF37">⏳ جاري تحميل الشقق...</div>';
   try{
     if(!db) throw new Error('no db');
@@ -207,13 +213,13 @@ async function loadProps(){
       renderProps(); renderHomeProps(true); checkDeepLink();
     } else if(!props || !props.length){
       let errTxt = window.__fahdLastFetchErr ? ('<div style="font-size:12px;color:#ff9a9a;word-break:break-word;margin-top:8px">خطأ Firebase: ' + String(window.__fahdLastFetchErr).replace(/</g,'&lt;') + '</div>') : '<div style="font-size:12px;color:#aaa;margin-top:8px">Firebase رجع 0 وثيقة من properties - افتح Firebase &gt; Firestore &gt; properties وشوف هل الشقق موجودة هناك ولا لا</div>';
-      if(homeEl) homeEl.innerHTML='<div style="text-align:center;line-height:1.8">⚠️ الشقق ما حملتش من Firebase - عدد العقارات اللي وصل: 0 - دوس حاول تاني - ولو فضل فاضي دوس مسح الكاش</div>' + errTxt + '<button class="btn gold" style="width:100%;margin-top:10px" onclick="loadProps()">🔄 حاول تاني</button><button class="btn" style="width:100%;margin-top:8px" onclick="try{localStorage.removeItem(\'fahdPropsCache\');}catch(e){} loadProps()">🧹 مسح الكاش وحاول تاني</button>';
+      if(homeEl) homeEl.innerHTML='<div style="text-align:center;line-height:1.8">⚠️ الشقق ما حملتش من Firebase - عدد العقارات اللي وصل: 0 - دوس حاول تاني - ولو فضل فاضي دوس مسح الكاش</div>' + errTxt + '<button class="btn gold" style="width:100%;margin-top:10px" onclick="loadProps({force:true})">🔄 حاول تاني</button><button class="btn" style="width:100%;margin-top:8px" onclick="try{localStorage.removeItem(\'fahdPropsCache\');}catch(e){} loadProps({force:true})">🧹 مسح الكاش وحاول تاني</button>';
     }
   }catch(e){
     if(!props || !props.length){
       let shown=false;
       try{ let c=JSON.parse(localStorage.getItem('fahdPropsCache')||'null'); if(c && c.props && c.props.length){ props=fahdFilterPublic(c.props); renderProps(); renderHomeProps(true); shown=true; } }catch(err){}
-      if(!shown){ if(homeEl) homeEl.innerHTML='<div style="text-align:center;line-height:1.8">⚠️ الشقق ما حملتش - دوس حاول تاني</div><button class="btn gold" style="width:100%;margin-top:10px" onclick="loadProps()">🔄 حاول تاني</button>'; }
+      if(!shown){ if(homeEl) homeEl.innerHTML='<div style="text-align:center;line-height:1.8">⚠️ الشقق ما حملتش - دوس حاول تاني</div><button class="btn gold" style="width:100%;margin-top:10px" onclick="loadProps({force:true})">🔄 حاول تاني</button>'; }
     }
   }
 }
@@ -232,10 +238,9 @@ async function doOwnerPublish(e){ e.preventDefault(); let title=document.getElem
     // حماية من خطأ Firebase: حجم الشقة لازم يبقى أقل من 1 ميجا
     const totalSize2 = (ownerImgs||[]).reduce((s,d)=>s+(d?d.length:0),0);
     if(totalSize2 > 800000){ document.getElementById('ownMsg').textContent='الصور لسه كبيرة أوي - اختار 6 صور أو أقل - الحجم الحالي: '+Math.round(totalSize2/1024)+' KB'; return; }
-     try{ await db.collection('ownerOffers').add({owner, phone, title, city, address, area:city, type, price, rooms, baths, details, notes: details+' | العنوان: '+address, image:(ownerImgs[0]||''), images: ownerImgs, fromOwner:true, status:'قيد المراجعة', createdAt:new Date().toISOString()}); document.getElementById('ownMsg').textContent='✅ تم استلام عرضك - قيد المراجعة - المكتب رح يراجعو ويوافق عليه قبل النشر على الرئيسية - شكراً'; e.target.reset(); ownerImgs=[]; document.getElementById('oPreviewGrid').innerHTML=''; document.getElementById('oImgCount').textContent=''; loadProps(); }catch(err){ document.getElementById('ownMsg').textContent='خطأ: '+err.message; } }
+     try{ await db.collection('ownerOffers').add({owner, phone, title, city, address, area:city, type, price, rooms, baths, details, notes: details+' | العنوان: '+address, image:(ownerImgs[0]||''), images: ownerImgs, fromOwner:true, status:'قيد المراجعة', createdAt:new Date().toISOString()}); document.getElementById('ownMsg').textContent='✅ تم استلام عرضك - قيد المراجعة - المكتب رح يراجعو ويوافق عليه قبل النشر على الرئيسية - شكراً'; e.target.reset(); ownerImgs=[]; document.getElementById('oPreviewGrid').innerHTML=''; document.getElementById('oImgCount').textContent=''; loadProps({force:true}); }catch(err){ document.getElementById('ownMsg').textContent='خطأ: '+err.message; } }
 
 loadProps();
-setTimeout(function(){ try{ if(!props || !props.length) loadProps(); }catch(e){} }, 1200);
 </script>
 <div id="guideModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;overflow:auto;padding:12px"><div style="max-width:520px;margin:20px auto;position:relative"><button onclick="document.getElementById('guideModal').style.display='none'" style="position:absolute;top:8px;left:8px;z-index:2;background:#000;color:#fff;border:2px solid #D4AF37;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer">✕</button><img src="guide.jpeg" alt="شرح طريقة إضافة موقع مكتب الفهد إلى الشاشة الرئيسية" style="width:100%;border-radius:16px;border:2px solid #D4AF37;display:block"><button onclick="document.getElementById('guideModal').style.display='none'" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#E8C97A,#D4AF37);color:#000;font-weight:900;padding:14px;border:none;border-radius:10px;font-size:16px">تمام - فهمت ✕ اقفل</button></div></div>
 
