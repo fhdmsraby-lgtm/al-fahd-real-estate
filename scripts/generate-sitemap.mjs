@@ -49,7 +49,7 @@ function propertyArea(p) {
   const candidates = [p.areaM2, p.areaSqm, p.squareMeters, p.size, p.areaSize];
   if (p.city || p.location) candidates.push(p.area);
   for (const value of candidates) {
-    const n = Number(String(value ?? "").replace(/,/g, "").replace(/[^\\d.]/g, ""));
+    const n = Number(String(value ?? "").replace(/,/g, "").replace(/[^0-9.]/g, ""));
     if (Number.isFinite(n) && n > 0) return n;
   }
   return null;
@@ -65,7 +65,7 @@ function numericPrice(value) {
 function propertyPage(id, p) {
   const title = String(p.title || "عقار للبيع أو الإيجار في القاهرة");
   // "area" was historically also used to store the neighborhood name.
-  const city = String(p.city || p.location || (typeof p.area === "string" && !/^\\s*\\d/.test(p.area) ? p.area : "القاهرة"));
+  const city = String(p.city || p.location || (typeof p.area === "string" && !/^[0-9]/.test(p.area.trim()) ? p.area : "القاهرة"));
   const area = propertyArea(p);
   const address = String(p.address || "");
   const priceText = String(p.price ?? "السعر عند التواصل");
