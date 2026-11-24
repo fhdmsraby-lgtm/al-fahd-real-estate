@@ -145,7 +145,7 @@ for (const entry of await readdir(generatedRoot, { withFileTypes: true })) {
   const file = generatedRoot + "/" + entry.name + "/index.html";
   try {
     const old = await readFile(file, "utf8");
-    if (old.startsWith(generatedMarker)) await rm(generatedRoot + "/" + entry.name, { recursive: true, force: true });
+    if (old.startsWith(generatedMarker) || !old.trim()) await rm(generatedRoot + "/" + entry.name, { recursive: true, force: true });
   } catch {}
 }
 const urls = [
