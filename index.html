@@ -142,7 +142,7 @@ async function filesToCompressedDataUrls(files, maxCount){
 }
 
 const firebaseConfig={apiKey:"AIzaSyBzyKd-sFJzeZMQsxaJaeuA_tQxNOMRtAs",authDomain:"al-fahd-real-estate.firebaseapp.com",projectId:"al-fahd-real-estate",storageBucket:"al-fahd-real-estate.firebasestorage.app",messagingSenderId:"513435020066",appId:"1:513435020066:web:58453287f89585ce84937b",measurementId:"G-6VHP88T03V"};
-let db=null; try{firebase.initializeApp(firebaseConfig); db=firebase.firestore();}catch(e){}
+let db=null; try{firebase.initializeApp(firebaseConfig); db=firebase.firestore(); try{ db.enablePersistence({synchronizeTabs:true}).catch(function(){}); }catch(e){} }catch(e){}
 let props=[], ownerImgs=[];
 function show(v,btn){document.querySelectorAll('.view').forEach(e=>e.classList.add('hidden')); document.getElementById('v-'+v).classList.remove('hidden'); document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); window.scrollTo(0,0); if(v==='properties') renderProps();}
 function compressImg(file){ return new Promise(res=>{ let r=new FileReader(); r.onload=e=>{ let img=new Image(); img.onload=()=>{ let c=document.createElement('canvas'); let max=550; let w=img.width,h=img.height; if(w>max){h=h*max/w;w=max;} c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h); res(c.toDataURL('image/jpeg',0.35)); }; img.src=e.target.result; }; r.readAsDataURL(file); }); }
@@ -182,6 +182,21 @@ async function loadProps(options){
   if(homeEl && (!props || !props.length)) homeEl.innerHTML='<div style="text-align:center;padding:20px;color:#D4AF37">⏳ جاري تحميل الشقق...</div>';
   try{
     if(!db) throw new Error('no db');
+    // اقرأ نسخة Firestore المحلية أولاً إن كانت موجودة؛ ثم حدّثها من الخادم في الخلفية.
+    try{
+      let localSnap=await db.collection('properties').orderBy('__name__').limit(500).get({source:'cache'});
+      if(localSnap && !localSnap.empty){
+        let localItems=[];
+        localSnap.forEach(d=>{let v=d.data();v._id=d.id;localItems.push(v);});
+        localItems=fahdFilterPublic(localItems);
+        if(localItems.length){
+          props=localItems;
+          props.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+          try{localStorage.setItem('fahdPropsCache',JSON.stringify({props:props,updatedAt:new Date().toISOString()}));}catch(e){}
+          renderProps();renderHomeProps(true);
+        }
+      }
+    }catch(cacheErr){}
     // 2) AL FAHD FIX - جيب مباشرة من Firebase أولاً - لا تعتمد على fahd-core-fix.js القديم أبداً
     // السبب: الملف القديم كان بيرجع 0 و index كان بيوقف عليه - هلأ المباشر أولاً - والقديم بس احتياطي
     let all=[]; let directErr='';
