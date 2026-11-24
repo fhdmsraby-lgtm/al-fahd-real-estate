@@ -40,7 +40,19 @@ function isPublic(p) {
   if (hiddenStatus.test(status)) return false;
   const approved = p.approved;
   if (approved === false || approved === 0 || approved === "pending" || approved === "قيد المراجعة" || approved === "مرفوض") return false;
-  return true;
+  // Do not publish empty Firestore documents as blank property pages.
+  const hasImages = (Array.isArray(p.images) && p.images.some(Boolean)) || Boolean(p.image);
+  const hasContent = [p.title, p.details, p.description, p.price, p.address].some(v => String(v ?? "").trim()) || hasImages;
+  return hasContent;
+}
+function propertyArea(p) {
+  const candidates = [p.areaM2, p.areaSqm, p.squareMeters, p.size, p.areaSize];
+  if (p.city || p.location) candidates.push(p.area);
+  for (const value of candidates) {
+    const n = Number(String(value ?? "").replace(/,/g, "").replace(/[^\\d.]/g, ""));
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
 }
 function dateOnly(value) {
   const d = value ? new Date(value) : new Date();
@@ -52,14 +64,16 @@ function numericPrice(value) {
 }
 function propertyPage(id, p) {
   const title = String(p.title || "عقار للبيع أو الإيجار في القاهرة");
-  const city = String(p.city || p.area || "القاهرة");
+  // "area" was historically also used to store the neighborhood name.
+  const city = String(p.city || p.location || (typeof p.area === "string" && !/^\\s*\\d/.test(p.area) ? p.area : "القاهرة"));
+  const area = propertyArea(p);
   const address = String(p.address || "");
   const priceText = String(p.price ?? "السعر عند التواصل");
   const details = String(p.details || p.description || title);
   const type = String(p.type || p.dealType || "عقار");
   const rooms = p.rooms ?? "-";
   const baths = p.baths ?? "-";
-  const area = p.area ?? "-";
+  const areaText = area ? String(area) : "-";
   const images = (Array.isArray(p.images) ? p.images : []).map(safeUrl).filter(Boolean);
   if (!images.length && p.image) {
     const image = safeUrl(p.image);
@@ -90,12 +104,12 @@ function propertyPage(id, p) {
     },
     "numberOfRooms": Number(rooms) || undefined,
     "numberOfBathroomsTotal": Number(baths) || undefined,
-    "floorSize": Number(area) ? { "@type": "QuantitativeValue", "value": Number(area), "unitCode": "MTK" } : undefined
+    "floorSize": area ? { "@type": "QuantitativeValue", "value": area, "unitCode": "MTK" } : undefined
   };
   const jsonLd = JSON.stringify(schema).replace(/</g, "\\u003c");
   const imageHtml = images.map((src, i) => '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(title) + ' - صورة ' + (i + 1) + '" loading="lazy">').join("\n");
   const status = String(p.status || "متاح");
-  return generatedMarker + '\n<!doctype html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<meta name="fahd:property_id" content="' + escapeHtml(id) + '">\n<script async src="https://www.googletagmanager.com/gtag/js?id=G-6VHP88T03V"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag(\'js\',new Date());gtag(\'config\',\'G-6VHP88T03V\');</script>\n<script defer src="' + site + 'fahd-analytics.js?v=20261124"></script>\n<title>' + escapeHtml(seoTitle) + '</title>\n<meta name="description" content="' + escapeHtml(description) + '">\n<meta name="robots" content="index,follow">\n<link rel="canonical" href="' + escapeHtml(canonical) + '">\n<meta property="og:type" content="article">\n<meta property="og:site_name" content="مكتب الفهد للعقارات">\n<meta property="og:url" content="' + escapeHtml(canonical) + '">\n<meta property="og:title" content="' + escapeHtml(seoTitle) + '">\n<meta property="og:description" content="' + escapeHtml(description) + '">\n' + (images[0] ? '<meta property="og:image" content="' + escapeHtml(images[0]) + '">' : '') + '\n<script type="application/ld+json">' + jsonLd + '</scr' + 'ipt>\n<style>body{margin:0;background:#0a0a0a;color:#f7f7f7;font-family:Tahoma,Arial,sans-serif;line-height:1.8}.wrap{max-width:820px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:2px solid #d4af37;padding-bottom:14px}.brand{color:#d4af37;font-weight:900}.card{background:#171717;border:1px solid #333;border-radius:16px;padding:18px;margin-top:18px}h1{color:#d4af37;font-size:27px}.price{font-size:25px;color:#d4af37;font-weight:900}.muted{color:#bbb}.facts{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.fact{background:#242424;padding:7px 12px;border-radius:9px}img{display:block;width:100%;height:auto;max-height:560px;object-fit:cover;border-radius:12px;margin:12px 0}.btn{display:inline-block;text-decoration:none;padding:11px 16px;border-radius:9px;font-weight:bold;margin:6px 4px}.gold{background:#d4af37;color:#111}.green{background:#16a34a;color:white}</style>\n</head>\n<body><main class="wrap">\n<header class="top"><div class="brand">AL FAHD REAL ESTATE<br><span class="muted">مكتب الفهد للعقارات</span></div><a class="btn gold" href="' + site + '">العودة للموقع</a></header>\n<article class="card">\n<h1>' + escapeHtml(title) + '</h1>\n<p class="muted">الموقع: ' + escapeHtml(city) + (address ? ' - ' + escapeHtml(address) : '') + '</p>\n<div class="price">' + escapeHtml(priceText) + ' جنيه</div>\n<div class="facts"><span class="fact">النوع: ' + escapeHtml(type) + '</span><span class="fact">الغرف: ' + escapeHtml(rooms) + '</span><span class="fact">الحمامات: ' + escapeHtml(baths) + '</span><span class="fact">المساحة: ' + escapeHtml(area) + ' م²</span></div>\n<p>' + escapeHtml(details).replace(/\r?\n/g, "<br>") + '</p>\n' + imageHtml + '\n<p>الحالة: ' + escapeHtml(status) + '</p>\n<button class="btn gold" type="button" onclick="copyStaticPropertyLink()">📋 نسخ رابط الشقة</button>\n<a class="btn green" href="https://wa.me/201040872120?text=' + encodeURIComponent("أريد الاستفسار عن العقار: " + title + " - " + canonical) + '">تواصل عبر واتساب 01040872120</a>\n<a class="btn gold" href="tel:+201040872120">اتصال بالمكتب</a>\n<p id="copyFeedback" class="muted" aria-live="polite"></p>\n<script>async function copyStaticPropertyLink(){const u=location.href.split("#")[0];const m=document.getElementById("copyFeedback");try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(u)}else{const t=document.createElement("textarea");t.value=u;t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();const ok=document.execCommand("copy");t.remove();if(!ok)throw new Error("copy failed")}m.textContent="تم نسخ رابط الشقة بنجاح"}catch(e){m.textContent="انسخ الرابط يدوياً: "+u}}</script>\n</article></main></body></html>\n';
+  return generatedMarker + '\n<!doctype html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<meta name="fahd:property_id" content="' + escapeHtml(id) + '">\n<script async src="https://www.googletagmanager.com/gtag/js?id=G-6VHP88T03V"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag(\'js\',new Date());gtag(\'config\',\'G-6VHP88T03V\');</script>\n<script defer src="' + site + 'fahd-analytics.js?v=20261124"></script>\n<title>' + escapeHtml(seoTitle) + '</title>\n<meta name="description" content="' + escapeHtml(description) + '">\n<meta name="robots" content="index,follow">\n<link rel="canonical" href="' + escapeHtml(canonical) + '">\n<meta property="og:type" content="article">\n<meta property="og:site_name" content="مكتب الفهد للعقارات">\n<meta property="og:url" content="' + escapeHtml(canonical) + '">\n<meta property="og:title" content="' + escapeHtml(seoTitle) + '">\n<meta property="og:description" content="' + escapeHtml(description) + '">\n' + (images[0] ? '<meta property="og:image" content="' + escapeHtml(images[0]) + '">' : '') + '\n<script type="application/ld+json">' + jsonLd + '</scr' + 'ipt>\n<style>body{margin:0;background:#0a0a0a;color:#f7f7f7;font-family:Tahoma,Arial,sans-serif;line-height:1.8}.wrap{max-width:820px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:2px solid #d4af37;padding-bottom:14px}.brand{color:#d4af37;font-weight:900}.card{background:#171717;border:1px solid #333;border-radius:16px;padding:18px;margin-top:18px}h1{color:#d4af37;font-size:27px}.price{font-size:25px;color:#d4af37;font-weight:900}.muted{color:#bbb}.facts{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.fact{background:#242424;padding:7px 12px;border-radius:9px}img{display:block;width:100%;height:auto;max-height:560px;object-fit:cover;border-radius:12px;margin:12px 0}.btn{display:inline-block;text-decoration:none;padding:11px 16px;border-radius:9px;font-weight:bold;margin:6px 4px}.gold{background:#d4af37;color:#111}.green{background:#16a34a;color:white}</style>\n</head>\n<body><main class="wrap">\n<header class="top"><div class="brand">AL FAHD REAL ESTATE<br><span class="muted">مكتب الفهد للعقارات</span></div><a class="btn gold" href="' + site + '">العودة للموقع</a></header>\n<article class="card">\n<h1>' + escapeHtml(title) + '</h1>\n<p class="muted">الموقع: ' + escapeHtml(city) + (address ? ' - ' + escapeHtml(address) : '') + '</p>\n<div class="price">' + escapeHtml(priceText) + ' جنيه</div>\n<div class="facts"><span class="fact">النوع: ' + escapeHtml(type) + '</span><span class="fact">الغرف: ' + escapeHtml(rooms) + '</span><span class="fact">الحمامات: ' + escapeHtml(baths) + '</span><span class="fact">المساحة: ' + escapeHtml(areaText) + (area ? ' م²' : '') + '</span></div>\n<p>' + escapeHtml(details).replace(/\r?\n/g, "<br>") + '</p>\n' + imageHtml + '\n<p>الحالة: ' + escapeHtml(status) + '</p>\n<button class="btn gold" type="button" onclick="copyStaticPropertyLink()">📋 نسخ رابط الشقة</button>\n<a class="btn green" href="https://wa.me/201040872120?text=' + encodeURIComponent("أريد الاستفسار عن العقار: " + title + " - " + canonical) + '">تواصل عبر واتساب 01040872120</a>\n<a class="btn gold" href="tel:+201040872120">اتصال بالمكتب</a>\n<p id="copyFeedback" class="muted" aria-live="polite"></p>\n<script>async function copyStaticPropertyLink(){const u=location.href.split("#")[0];const m=document.getElementById("copyFeedback");try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(u)}else{const t=document.createElement("textarea");t.value=u;t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();const ok=document.execCommand("copy");t.remove();if(!ok)throw new Error("copy failed")}m.textContent="تم نسخ رابط الشقة بنجاح"}catch(e){m.textContent="انسخ الرابط يدوياً: "+u}}</script>\n</article></main></body></html>\n';
 }
 
 async function fetchAllProperties() {
