@@ -47,7 +47,7 @@ function isPublic(p) {
 }
 function propertyArea(p) {
   const candidates = [p.areaM2, p.areaSqm, p.squareMeters, p.size, p.areaSize];
-  if (p.city || p.location) candidates.push(p.area);
+  if (p.city || p.location || (p.area !== null && p.area !== undefined && /^[0-9]/.test(String(p.area).trim()))) candidates.push(p.area);
   for (const value of candidates) {
     const n = Number(String(value ?? "").replace(/,/g, "").replace(/[^0-9.]/g, ""));
     if (Number.isFinite(n) && n > 0) return n;
